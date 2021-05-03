@@ -1,3 +1,5 @@
+# Acceptor for a^n + b^n + c^n
+
 initial state: q_0
 final states:
   - q_f
