@@ -1,0 +1,67 @@
+description: divide tape one by tape two, leaving the remainder in
+  tape one while putting the result in tape three (which should be
+  empty). Language is {'a'}
+
+tapes: 3
+
+initial state: slide right
+final states:
+  - qf
+states:
+  - slide right
+  - subtract bottom
+  - reset divisor
+  - re-add
+  - qf
+
+input alphabet: a
+tape alphabet: a
+
+transitions:
+  slide right:
+    a,a,_:
+      state: slide right
+      write: a,a,_
+      move: R,N,N
+    _,a,_:
+      state: subtract bottom
+      write: _,a,_
+      move: L,N,N
+
+  subtract bottom:
+    a,a,_:
+      state: subtract bottom
+      write: _,a,_
+      move: L,R,N
+    a,_,_:
+      state: reset divisor
+      write: a,_,a
+      move: N,L,R
+    _,a,_:
+      state: re-add
+      write: _,a,_
+      move: R,L,N
+    _,_,_:
+      state: qf
+      write: _,_,a
+      move: N,N,N
+
+  reset divisor:
+    a,a,_:
+      state: reset divisor
+      write: a,a,_
+      move: N,L,N
+    a,_,_:
+      state: subtract bottom
+      write: a,_,_
+      move: N,R,N
+
+  re-add:
+    _,a,_:
+      state: re-add
+      write: a,a,_
+      move: R,L,N
+    _,_,_:
+      state: qf
+      write: _,_,_
+      move: N,N,N

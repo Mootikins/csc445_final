@@ -49,6 +49,7 @@ def main():
 
     # input loop on machine
     print("Use Ctrl+d or Ctrl+c to exit")
+    print("Machine description: ", machine.description)
     while True:
         try:
             tapes = []

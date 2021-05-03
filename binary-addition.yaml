@@ -1,6 +1,6 @@
 # binary addition -- these are little endian
 #
-# add tape one and tape two, putting the result into tape two
+description: add tape one and tape two, putting the result into tape two
 
 tapes: 2
 

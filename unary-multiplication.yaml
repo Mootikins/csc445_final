@@ -1,0 +1,40 @@
+# unary multiplication
+#
+description: multiply tape one and tape two, putting the result into tape three
+
+tapes: 3
+
+initial state: add top
+final states:
+  - qf
+states:
+  - add top
+  - scroll back
+  - qf
+
+input alphabet: a
+tape alphabet: a
+
+transitions:
+  add top:
+    'a,a,_':
+      state: add top
+      write: 'a,a,a'
+      move: 'R,N,R'
+    '_,a,_':
+      state: scroll back
+      write: '_,a,_'
+      move: 'L,R,N'
+  scroll back:
+    'a,a,_':
+      state: scroll back
+      write: 'a,a,_'
+      move: 'L,N,N'
+    '_,a,_':
+      state: add top
+      write: '_,a,_'
+      move: 'R,N,N'
+    'a,_,_':
+      state: qf
+      write: 'a,_,_'
+      move: 'N,L,L'

@@ -1,4 +1,4 @@
-# Acceptor for a^n + b^n + c^n
+description: Acceptor and transducer for a^n + b^n + c^n
 
 tapes: 1
 

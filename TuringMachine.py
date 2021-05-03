@@ -21,6 +21,7 @@ class TransitionFunction:
 def verify_yaml_dictionary(
     input: Dict,
 ) -> Tuple[
+    str,
     int,
     Set[str],
     str,
@@ -29,6 +30,9 @@ def verify_yaml_dictionary(
     Set[str],
     Dict[str, Dict[str, TransitionFunction]],
 ]:
+    desc = input.get("description", "")
+    if not isinstance(desc, str):
+        raise TypeError("`description` is not a string")
     number_tapes = input.get("tapes", 1)
     if not isinstance(number_tapes, int):
         raise TypeError("`tapes` should be undefined or a positive integer")
@@ -126,6 +130,7 @@ def verify_yaml_dictionary(
             new_trans[state][alpha] = built_func
 
     return (
+        desc,
         number_tapes,
         set(states),
         initial_state,
@@ -141,8 +146,13 @@ class TuringMachine:
     def number_tapes(self) -> int:
         return self.__number_tapes
 
+    @property
+    def description(self) -> str:
+        return self.__description
+
     def __init__(
         self,
+        description: str,
         number_tapes: int,
         states: Set[str],
         initial_state: str,
@@ -152,6 +162,7 @@ class TuringMachine:
         transitions: Dict[str, Dict[str, TransitionFunction]],
         debug: bool = False,
     ):
+        self.__description = description
         self.__number_tapes = number_tapes
         self.__states = states
         self.__initial_state = initial_state
@@ -168,11 +179,14 @@ class TuringMachine:
 
         if not len(input_strs) == self.__number_tapes:
             raise ValueError("Passed number of strings does not match number of tapes")
-        tapes = list(map(lambda in_str: list(in_str), input_strs))
+        tapes = list(
+            map(lambda in_str: list(in_str) if len(in_str) > 0 else ["_"], input_strs)
+        )
         tape_indices = [0 for _str in input_strs]
 
         state = self.__initial_state
         while state not in self.__final_states:
+            print(tapes, tape_indices)
             tape_alpha_status = [
                 tape[tape_indices[idx]] for idx, tape in enumerate(tapes)
             ]
