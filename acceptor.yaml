@@ -1,4 +1,5 @@
-description: Acceptor and transducer for a^n + b^n + c^n
+description: Acceptor and transducer for a^n + b^n + c^n. Note that all n's are
+  equal.
 
 tapes: 1
 
