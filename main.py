@@ -48,17 +48,20 @@ def main():
     machine = TuringMachine(*machine_tuple)
 
     # input loop on machine
-    try:
-        print("Use Ctrl+d to exit")
-        while True:
+    print("Use Ctrl+d or Ctrl+c to exit")
+    while True:
+        try:
             input_str = input("Enter a string to test/run: ")
-            output = machine.run(input_str)
-            print(f"Result string: `{output}`")
-    except KeyboardInterrupt:
-        print("Exiting...")
-        exit(0)
-    except Exception as e:
-        print(e)
+            final_state, tape = machine.run(input_str)
+            print(f"Final State: `{final_state}`\nResult string: `{tape}`")
+        except EOFError:
+            print("Exiting...")
+            exit(0)
+        except KeyboardInterrupt:
+            print("Exiting...")
+            exit(0)
+        except Exception as e:
+            print(e)
 
 
 if __name__ == "__main__":

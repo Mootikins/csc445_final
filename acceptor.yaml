@@ -12,61 +12,64 @@ input alphabet: abc
 tape alphabet: abcxyz
 
 transitions:
+  # find and replace next a
   q_0:
     a:
       state: q_1
       write: x
       move: R
-    x:
-      state: q_1
-      write: x
-      move: R
     y:
-      state: q_1
+      state: q_0
       write: y
       move: R
     z:
-      state: q_1
+      state: q_0
       write: z
       move: R
     _:
       state: q_f
       write: _
-      move: R
+      move: L
 
+  # skip a's until we find and replace b
   q_1:
     a:
       state: q_1
       write: a
       move: R
-    y:
-      state: q_1
-      write: y
-      move: R
     b:
       state: q_2
       write: y
       move: R
+    y:
+      state: q_1
+      write: y
+      move: R
 
+  # skip b's until we find and replace c
   q_2:
     b:
       state: q_2
       write: b
       move: R
-    z:
-      state: q_2
-      write: z
-      move: R
     c:
       state: q_3
       write: z
       move: L
+    z:
+      state: q_2
+      write: z
+      move: R
 
   q_3:
     a:
       state: q_3
       write: a
       move: L
+    x:
+      state: q_0
+      write: x
+      move: R
     b:
       state: q_3
       write: b
@@ -75,11 +78,11 @@ transitions:
       state: q_3
       write: y
       move: L
+    c:
+      state: q_3
+      write: c
+      move: L
     z:
       state: q_3
       write: z
       move: L
-    x:
-      state: q_0
-      write: x
-      move: R

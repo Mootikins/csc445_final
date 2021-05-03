@@ -30,7 +30,7 @@ def verify_yaml_dictionary(
     states = input.get("states")
     if states is None:
         raise ValueError("`states` cannot be empty")
-    if not isinstance(states, List[str]):
+    if not isinstance(states, list):
         raise TypeError("`states` is not a list of strings")
 
     initial_state = input.get("initial state")
@@ -64,7 +64,7 @@ def verify_yaml_dictionary(
     if transitions is None:
         raise ValueError("`transitions` cannot be empty")
 
-    if not isinstance(transitions, Dict[str, Any]):
+    if not isinstance(transitions, dict):
         raise ValueError("`transitions` should be key/value pairs")
 
     new_trans = {}
@@ -72,7 +72,11 @@ def verify_yaml_dictionary(
         if state not in states:
             raise ValueError(f"State `{state}` not in `states`")
 
-        if not isinstance(alpha_transitions, Dict[str, Any]):
+        print(f"Adding state: `{state}`")
+        if new_trans.get(state) is None:
+            new_trans[state] = {}
+
+        if not isinstance(alpha_transitions, dict):
             raise ValueError(f"Value for state `{state}` should be a dictionary")
 
         for alpha, func in alpha_transitions.items():
@@ -135,7 +139,7 @@ class TuringMachine:
         self.__transitions = transitions
         self.__debug = debug
 
-    def run(self, input: str) -> str:
+    def run(self, input: str) -> Tuple[str, str]:
         if not set(input).issubset(self.__input_alpha):
             raise ValueError(f"`{input}` not subset of input alphabet")
 
@@ -149,6 +153,11 @@ class TuringMachine:
             except KeyError:
                 raise ValueError(
                     f"Transition not defined for ({state}, {tape[tape_index]})."
+                )
+            if self.__debug:
+                print(
+                    f"({state}, {tape[tape_index]} (ind {tape_index})) => "
+                    f"({transition.destination}, {transition.write_alpha}, {transition.direction})"
                 )
 
             tape[tape_index] = transition.write_alpha
@@ -164,6 +173,7 @@ class TuringMachine:
 
                 tape_index += 1
 
-        print(f"Final state reached: `{state}`\nTape Result: `{''.join(tape)}`")
+            if self.__debug:
+                print(f"New tape: {tape}")
 
-        return "Pass"
+        return (state, "".join(tape).strip("_"))
