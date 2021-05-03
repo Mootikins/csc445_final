@@ -1,5 +1,7 @@
 # Acceptor for a^n + b^n + c^n
 
+tapes: 1
+
 initial state: q_0
 final states:
   - q_f
@@ -13,8 +15,8 @@ states:
 input alphabet: abc 
 tape alphabet: abcxyz
 
+# '_' is the special char for blank
 transitions:
-  # find and replace next a
   q_0:
     a:
       state: q_1
@@ -33,7 +35,6 @@ transitions:
       write: _
       move: L
 
-  # skip a's until we find and replace b
   q_1:
     a:
       state: q_1
@@ -48,7 +49,6 @@ transitions:
       write: y
       move: R
 
-  # skip b's until we find and replace c
   q_2:
     b:
       state: q_2

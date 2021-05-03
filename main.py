@@ -45,15 +45,19 @@ def main():
         print(f"Error parsing YAML definition: {e}")
         exit(1)
 
-    machine = TuringMachine(*machine_tuple)
+    machine = TuringMachine(*machine_tuple, args.debug)
 
     # input loop on machine
     print("Use Ctrl+d or Ctrl+c to exit")
     while True:
         try:
-            input_str = input("Enter a string to test/run: ")
-            final_state, tape = machine.run(input_str)
-            print(f"Final State: `{final_state}`\nResult string: `{tape}`")
+            tapes = []
+            for tape in range(machine.number_tapes):
+                tapes.append(input("Enter a string to test/run: "))
+            final_state, tapes = machine.run(tapes)
+            print(f"Final State: `{final_state}`")
+            for idx, tape in enumerate(tapes):
+                print(f"Tape {idx + 1}: `{tape}`")
         except EOFError:
             print("Exiting...")
             exit(0)

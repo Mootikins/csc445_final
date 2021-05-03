@@ -13,13 +13,14 @@ class TapeDirection(Enum):
 @dataclass
 class TransitionFunction:
     destination: str
-    write_alpha: str
+    write_alpha: Tuple[str]
     direction: TapeDirection
 
 
 def verify_yaml_dictionary(
     input: Dict,
 ) -> Tuple[
+    int,
     Set[str],
     str,
     Set[str],
@@ -27,6 +28,10 @@ def verify_yaml_dictionary(
     Set[str],
     Dict[str, Dict[str, TransitionFunction]],
 ]:
+    number_tapes = input.get("tapes", 1)
+    if not isinstance(number_tapes, int):
+        raise TypeError("`tapes` should be undefined or a positive integer")
+
     states = input.get("states")
     if states is None:
         raise ValueError("`states` cannot be empty")
@@ -72,7 +77,6 @@ def verify_yaml_dictionary(
         if state not in states:
             raise ValueError(f"State `{state}` not in `states`")
 
-        print(f"Adding state: `{state}`")
         if new_trans.get(state) is None:
             new_trans[state] = {}
 
@@ -80,36 +84,41 @@ def verify_yaml_dictionary(
             raise ValueError(f"Value for state `{state}` should be a dictionary")
 
         for alpha, func in alpha_transitions.items():
-            if alpha not in tape_alpha:
-                raise ValueError(
-                    f"Input transition character `{alpha}`"
-                    " not in given tape alphabet"
+            alphas = tuple(alpha.split(","))
+            for alpha in alphas:
+                if alpha not in tape_alpha:
+                    raise ValueError(
+                        f"Input transition character `{alpha}`"
+                        " not in given tape alphabet"
+                    )
+
+            move_dir_str = func.get("move")
+            write_alpha_str = func.get("write")
+            if False in [
+                isinstance(val, str) for val in [write_alpha_str, move_dir_str]
+            ]:
+                raise TypeError(
+                    f"`write` and/or `move` for transition ({state}, {alpha}) is non-string"
                 )
 
+            move_dirs = tuple(move_dir_str.split(","))
+            write_alphas: Tuple[str, ...] = tuple(write_alpha_str.split(","))
+            for al in write_alphas:
+                if al not in tape_alpha:
+                    raise ValueError(f"State ({state}, {alpha}) has invalid write")
+
             dest_state = func.get("state")
-            write_alpha = func.get("write")
-            move_dir_str = func.get("move")
-
-            function = [dest_state, write_alpha, move_dir_str]
-            valids = [
-                dest_state in states,
-                write_alpha in tape_alpha,
-                move_dir_str in ["L", "R", "l", "r"],
-            ]
-
-            if (
-                False in list(map(lambda val: isinstance(val, str), function))
-                or False in valids
-            ):
-                raise ValueError(f"Invalid transition function for ({state}, {alpha})")
+            if not isinstance(dest_state, str) or dest_state not in states:
+                raise ValueError(f"Destination state for ({state}, {alpha}) is invalid")
 
             built_func = TransitionFunction(
-                dest_state, write_alpha, TapeDirection(move_dir_str.upper())
+                dest_state, write_alphas, TapeDirection(move_dir_str.upper())
             )
 
             new_trans[state][alpha] = built_func
 
     return (
+        number_tapes,
         set(states),
         initial_state,
         set(final_states),
@@ -120,17 +129,22 @@ def verify_yaml_dictionary(
 
 
 class TuringMachine:
+    @property
+    def number_tapes(self) -> int:
+        return self.__number_tapes
+
     def __init__(
         self,
+        number_tapes: int,
         states: Set[str],
         initial_state: str,
         final_states: Set[str],
         input_alpha: Set[str],
         tape_alpha: Set[str],
         transitions: Dict[str, Dict[str, TransitionFunction]],
-        # TODO: convert to False by default
-        debug: bool = True,
+        debug: bool = False,
     ):
+        self.__number_tapes = number_tapes
         self.__states = states
         self.__initial_state = initial_state
         self.__final_states = final_states
@@ -139,41 +153,46 @@ class TuringMachine:
         self.__transitions = transitions
         self.__debug = debug
 
-    def run(self, input: str) -> Tuple[str, str]:
-        if not set(input).issubset(self.__input_alpha):
-            raise ValueError(f"`{input}` not subset of input alphabet")
+    def run(self, input_strs: List[str]) -> Tuple[str, List[str]]:
+        for input_str in input_strs:
+            if not set(input_str).issubset(self.__input_alpha):
+                raise ValueError(f"`{input_strs}` not subset of input alphabet")
 
-        tape = list(input)
-        tape_index = 0
+        if not len(input_strs) == self.__number_tapes:
+            raise ValueError("Passed number of strings does not match number of tapes")
+        tapes = list(map(lambda in_str: list(in_str), input_strs))
+        tape_indices = [0 for _str in input_strs]
+
         state = self.__initial_state
-
         while state not in self.__final_states:
+            tape_alpha_status = [tape[idx] for idx in tape_indices for tape in tapes]
+            tape_key = ",".join(tape_alpha_status)
             try:
-                transition = self.__transitions[state][tape[tape_index]]
+                transition = self.__transitions[state][tape_key]
             except KeyError:
-                raise ValueError(
-                    f"Transition not defined for ({state}, {tape[tape_index]})."
-                )
+                raise ValueError(f"Transition not defined for ({state}, {tape_key}).")
             if self.__debug:
                 print(
-                    f"({state}, {tape[tape_index]} (ind {tape_index})) => "
+                    f"({state}, {tape_key} (ind {tape_indices})) => "
                     f"({transition.destination}, {transition.write_alpha}, {transition.direction})"
                 )
 
-            tape[tape_index] = transition.write_alpha
             state = transition.destination
-            if transition.direction is TapeDirection.LEFT:
-                if tape_index == 0:
-                    tape.insert(0, "_")
+            for idx, tape in enumerate(tapes):
+                tape[tape_indices[idx]] = transition.write_alpha[idx]
+                if transition.direction is TapeDirection.LEFT:
+                    if tape_indices[idx] == 0:
+                        tape.insert(0, "_")
+                    else:
+                        tape_indices[idx] -= 1
                 else:
-                    tape_index -= 1
-            else:
-                if tape_index == len(tape) - 1:
-                    tape.append("_")
+                    if tape_indices[idx] == len(tape) - 1:
+                        tape.append("_")
 
-                tape_index += 1
+                    tape_indices[idx] += 1
 
             if self.__debug:
-                print(f"New tape: {tape}")
+                for idx, tape in enumerate(tapes):
+                    print(f"Tape {idx + 1}: {tape}")
 
-        return (state, "".join(tape).strip("_"))
+        return (state, ["".join(tape).strip("_") for tape in tapes])

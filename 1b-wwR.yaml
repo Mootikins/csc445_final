@@ -1,0 +1,36 @@
+# Acceptor for ww^R where R is odd (or ww^R is even)
+
+tapes: 1
+
+initial state: q0
+final states:
+  - qf
+states:
+  - q0
+  - q1
+  - q2
+  - qf
+
+input alphabet: w
+tape alphabet: w
+
+transitions:
+  q0:
+    w:
+      state: q1
+      write: w
+      move: R
+  q1:
+    w:
+      state: q2
+      write: w
+      move: R
+  q2:
+    w:
+      state: q1
+      write: w
+      move: R
+    _:
+      state: qf
+      write: _
+      move: L
