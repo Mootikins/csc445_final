@@ -8,13 +8,14 @@ import yaml
 class TapeDirection(Enum):
     LEFT = "L"
     RIGHT = "R"
+    NONE = "N"
 
 
 @dataclass
 class TransitionFunction:
     destination: str
     write_alpha: Tuple[str]
-    direction: TapeDirection
+    direction: Tuple[TapeDirection, ...]
 
 
 def verify_yaml_dictionary(
@@ -85,11 +86,10 @@ def verify_yaml_dictionary(
 
         for alpha, func in alpha_transitions.items():
             alphas = tuple(alpha.split(","))
-            for alpha in alphas:
-                if alpha not in tape_alpha:
+            for al in alphas:
+                if al not in tape_alpha:
                     raise ValueError(
-                        f"Input transition character `{alpha}`"
-                        " not in given tape alphabet"
+                        f"Input transition character `{al}` not in given tape alphabet"
                     )
 
             move_dir_str = func.get("move")
@@ -102,6 +102,12 @@ def verify_yaml_dictionary(
                 )
 
             move_dirs = tuple(move_dir_str.split(","))
+            for move in move_dirs:
+                if move not in [e.value for e in TapeDirection]:
+                    raise ValueError(
+                        f"Move direction for ({state}, {alpha}) is invalid"
+                    )
+
             write_alphas: Tuple[str, ...] = tuple(write_alpha_str.split(","))
             for al in write_alphas:
                 if al not in tape_alpha:
@@ -112,7 +118,9 @@ def verify_yaml_dictionary(
                 raise ValueError(f"Destination state for ({state}, {alpha}) is invalid")
 
             built_func = TransitionFunction(
-                dest_state, write_alphas, TapeDirection(move_dir_str.upper())
+                dest_state,
+                write_alphas,
+                tuple([TapeDirection(dir.upper()) for dir in move_dirs]),
             )
 
             new_trans[state][alpha] = built_func
@@ -165,12 +173,14 @@ class TuringMachine:
 
         state = self.__initial_state
         while state not in self.__final_states:
-            tape_alpha_status = [tape[idx] for idx in tape_indices for tape in tapes]
+            tape_alpha_status = [
+                tape[tape_indices[idx]] for idx, tape in enumerate(tapes)
+            ]
             tape_key = ",".join(tape_alpha_status)
             try:
                 transition = self.__transitions[state][tape_key]
             except KeyError:
-                raise ValueError(f"Transition not defined for ({state}, {tape_key}).")
+                raise ValueError(f"Transition not defined for ({state}, ({tape_key})).")
             if self.__debug:
                 print(
                     f"({state}, {tape_key} (ind {tape_indices})) => "
@@ -180,12 +190,12 @@ class TuringMachine:
             state = transition.destination
             for idx, tape in enumerate(tapes):
                 tape[tape_indices[idx]] = transition.write_alpha[idx]
-                if transition.direction is TapeDirection.LEFT:
+                if transition.direction[idx] is TapeDirection.LEFT:
                     if tape_indices[idx] == 0:
                         tape.insert(0, "_")
                     else:
                         tape_indices[idx] -= 1
-                else:
+                elif transition.direction[idx] is TapeDirection.RIGHT:
                     if tape_indices[idx] == len(tape) - 1:
                         tape.append("_")
 

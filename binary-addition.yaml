@@ -1,0 +1,133 @@
+# binary addition -- these are little endian
+#
+# add tape one and tape two, putting the result into tape two
+
+tapes: 2
+
+initial state: slide right
+final states:
+  - qf
+states:
+  - slide right
+  - no carry
+  - carry
+  - qf
+
+input alphabet: '01'
+tape alphabet: '01'
+
+transitions:
+  # move to the 1 place
+  slide right:
+    '0,0':
+      state: slide right
+      write: '0,0'
+      move: 'R,R'
+    '1,0':
+      state: slide right
+      write: '1,0'
+      move: 'R,R'
+    '0,1':
+      state: slide right
+      write: '0,1'
+      move: 'R,R'
+    '1,1':
+      state: slide right
+      write: '1,1'
+      move: 'R,R'
+    '0,_':
+      state: slide right
+      write: '0,_'
+      move: 'R,N'
+    '1,_':
+      state: slide right
+      write: '1,_'
+      move: 'R,N'
+    '_,0':
+      state: slide right
+      write: '_,0'
+      move: 'N,R'
+    '_,1':
+      state: slide right
+      write: '_,1'
+      move: 'N,R'
+    '_,_':
+      state: no carry
+      write: '_,_'
+      move: 'L,L'
+
+  no carry:
+    '0,0':
+      state: no carry
+      write: '0,0'
+      move: 'L,L'
+    '1,0':
+      state: no carry
+      write: '1,1'
+      move: 'L,L'
+    '0,1':
+      state: no carry
+      write: '0,1'
+      move: 'L,L'
+    '_,0':
+      state: no carry
+      write: '_,0'
+      move: 'N,L'
+    '_,1':
+      state: no carry
+      write: '_,1'
+      move: 'N,L'
+    '0,_':
+      state: no carry
+      write: '0,0'
+      move: 'L,L'
+    '1,_':
+      state: no carry
+      write: '1,1'
+      move: 'L,L'
+    '1,1':
+      state: carry
+      write: '1,0'
+      move: 'L,L'
+    '_,_':
+      state: qf
+      write: '_,_'
+      move: 'R,R'
+
+  carry:
+    '0,0':
+      state: no carry
+      write: '0,1'
+      move: 'L,L'
+    '1,0':
+      state: carry
+      write: '1,0'
+      move: 'L,L'
+    '0,1':
+      state: carry
+      write: '0,0'
+      move: 'L,L'
+    '1,1':
+      state: carry
+      write: '1,1'
+      move: 'L,L'
+    '_,0':
+      state: no carry
+      write: '_,1'
+      move: 'N,L'
+    '_,1':
+      state: carry
+      write: '_,0'
+      move: 'N,L'
+    '0,_':
+      state: no carry
+      write: '0,1'
+      move: 'N,L'
+    '1,_':
+      state: carry
+      write: '1,0'
+      move: 'N,L'
+    '_,_':
+      state: qf
+      write: '_,1'
+      move: 'R,N'

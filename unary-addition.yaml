@@ -1,0 +1,28 @@
+# unary addition
+
+tapes: 2
+
+initial state: q0
+final states:
+  - qf
+states:
+  - q0
+  - qf
+
+input alphabet: 'a'
+tape alphabet: 'a'
+
+transitions:
+  q0:
+    a,a:
+      state: q0
+      write: a,a
+      move: R,N
+    _,a:
+      state: q0
+      write: a,a
+      move: R,R
+    _,_:
+      state: qf
+      write: _,_
+      move: L,L

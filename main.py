@@ -53,11 +53,13 @@ def main():
         try:
             tapes = []
             for tape in range(machine.number_tapes):
-                tapes.append(input("Enter a string to test/run: "))
+                tapes.append(input(f"Enter Tape {tape + 1} start value: "))
             final_state, tapes = machine.run(tapes)
+
             print(f"Final State: `{final_state}`")
             for idx, tape in enumerate(tapes):
                 print(f"Tape {idx + 1}: `{tape}`")
+
         except EOFError:
             print("Exiting...")
             exit(0)
